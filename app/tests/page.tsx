@@ -3,316 +3,233 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { AuthProvider } from "@/components/contexts/auth-context"
-import { MoodProvider } from "@/components/contexts/mood-context"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AuthGuard } from "@/components/auth-guard"
-import { BottomNavigation } from "@/components/bottom-navigation"
-import { MitraAIChat } from "@/components/mitra-ai-chat"
-import { Clock, Users, TrendingUp, Brain, Heart, Zap, Shield, AlertTriangle } from "lucide-react"
+import { AlertCircle, Clock, FileText, CheckCircle2, ChevronRight, HelpCircle, ShieldAlert } from "lucide-react"
 import Link from "next/link"
 
 const mentalHealthTests = [
   {
     id: "phq-9",
-    title: "PHQ-9 Depression Assessment",
-    description: "Patient Health Questionnaire-9 is a validated tool for screening and measuring depression severity.",
-    duration: "5-7 minutes",
+    name: "PHQ-9 (Patient Health Questionnaire)",
     questions: 9,
+    duration: "3-5 mins",
+    description: "Clinically validated screening tool to measure severity of depressive symptoms.",
     category: "Depression",
-    icon: Brain,
-    color: "bg-blue-500",
-    difficulty: "Easy",
-    popularity: "Most Popular",
-    lastTaken: null,
+    tabGroup: "mood",
+    gradient: "from-emerald-400 to-teal-400",
   },
   {
     id: "gad-7",
-    title: "GAD-7 Anxiety Assessment",
-    description:
-      "Generalized Anxiety Disorder-7 questionnaire to identify probable cases of GAD and measure anxiety severity.",
-    duration: "3-5 minutes",
+    name: "GAD-7 (Generalized Anxiety Disorder)",
     questions: 7,
+    duration: "2-4 mins",
+    description: "Brief self-report scale measuring the severity of generalized anxiety symptoms.",
     category: "Anxiety",
-    icon: Heart,
-    color: "bg-red-500",
-    difficulty: "Easy",
-    popularity: "Very Popular",
-    lastTaken: null,
+    tabGroup: "mood",
+    gradient: "from-blue-400 to-indigo-400",
   },
   {
     id: "dass-21",
-    title: "DASS-21 Stress Assessment",
-    description: "Depression, Anxiety and Stress Scale-21 measures emotional states of depression, anxiety and stress.",
-    duration: "8-10 minutes",
+    name: "DASS-21 (Depression, Anxiety & Stress Scale)",
     questions: 21,
-    category: "Comprehensive",
-    icon: Zap,
-    color: "bg-yellow-500",
-    difficulty: "Medium",
-    popularity: "Popular",
-    lastTaken: null,
+    duration: "5-8 mins",
+    description: "Set of three self-report scales designed to measure negative emotional states of depression, anxiety, and tension.",
+    category: "Tri-dimensional",
+    tabGroup: "stress",
+    gradient: "from-purple-400 to-pink-400",
   },
   {
     id: "pss-10",
-    title: "PSS-10 Perceived Stress Scale",
-    description:
-      "Measures the degree to which situations in your life are appraised as stressful during the last month.",
-    duration: "5-7 minutes",
+    name: "PSS-10 (Perceived Stress Scale)",
     questions: 10,
-    category: "Stress",
-    icon: TrendingUp,
-    color: "bg-orange-500",
-    difficulty: "Easy",
-    popularity: "Popular",
-    lastTaken: null,
+    duration: "3-5 mins",
+    description: "The most widely used psychological instrument for measuring the perception of stress.",
+    category: "Stress Perception",
+    tabGroup: "stress",
+    gradient: "from-orange-400 to-red-400",
   },
   {
     id: "who-5",
-    title: "WHO-5 Well-being Index",
-    description:
-      "World Health Organization Well-Being Index measures current mental well-being over the past two weeks.",
-    duration: "2-3 minutes",
+    name: "WHO-5 (Well-Being Index)",
     questions: 5,
-    category: "Well-being",
-    icon: Shield,
-    color: "bg-green-500",
-    difficulty: "Very Easy",
-    popularity: "Recommended",
-    lastTaken: null,
+    duration: "2 mins",
+    description: "A short self-reported questionnaire assessing subjective psychological well-being.",
+    category: "Well-Being",
+    tabGroup: "sleep",
+    gradient: "from-teal-400 to-emerald-400",
   },
   {
     id: "k10",
-    title: "K10 Psychological Distress Scale",
-    description: "Kessler Psychological Distress Scale measures anxiety and depressive symptoms in the past 4 weeks.",
-    duration: "4-6 minutes",
+    name: "K10 (Kessler Psychological Distress Scale)",
     questions: 10,
+    duration: "3-5 mins",
+    description: "Measures anxiety and depressive symptoms experienced during the past 4-week period.",
     category: "Distress",
-    icon: AlertTriangle,
-    color: "bg-purple-500",
-    difficulty: "Easy",
-    popularity: "Clinical Standard",
-    lastTaken: null,
+    tabGroup: "mood",
+    gradient: "from-yellow-400 to-amber-500",
+  },
+  {
+    id: "rses",
+    name: "Rosenberg Self-Esteem Scale (RSES)",
+    questions: 10,
+    duration: "3 mins",
+    description: "A widely used clinical instrument for evaluating subjective self-esteem and self-worth levels.",
+    category: "Self-Esteem",
+    tabGroup: "sleep",
+    gradient: "from-pink-400 to-rose-400",
+  },
+  {
+    id: "isi",
+    name: "Insomnia Severity Index (ISI)",
+    questions: 7,
+    duration: "2-3 mins",
+    description: "Brief screening assessment to detect difficulties in sleep onset and sleep maintenance.",
+    category: "Sleep Wellness",
+    tabGroup: "sleep",
+    gradient: "from-cyan-400 to-blue-400",
+  },
+  {
+    id: "burnout",
+    name: "Academic & Work Burnout Index",
+    questions: 10,
+    duration: "3 mins",
+    description: "Measures the severity of chronic exhaustion, disengagement, and cynicism related to studies or career.",
+    category: "Burnout",
+    tabGroup: "stress",
+    gradient: "from-amber-400 to-orange-400",
   },
 ]
 
-function TestsContent() {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Very Easy":
-        return "bg-green-100 text-green-800"
-      case "Easy":
-        return "bg-blue-100 text-blue-800"
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "Hard":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
+export default function TestsCatalogPage() {
+  const renderGrid = (groupId: "all" | "mood" | "stress" | "sleep") => {
+    const list = mentalHealthTests.filter((test) =>
+      groupId === "all" ? true : test.tabGroup === groupId
+    )
 
-  const getPopularityColor = (popularity: string) => {
-    switch (popularity) {
-      case "Most Popular":
-        return "bg-purple-100 text-purple-800"
-      case "Very Popular":
-        return "bg-pink-100 text-pink-800"
-      case "Popular":
-        return "bg-indigo-100 text-indigo-800"
-      case "Recommended":
-        return "bg-emerald-100 text-emerald-800"
-      case "Clinical Standard":
-        return "bg-amber-100 text-amber-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
+    return (
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {list.map((test) => (
+          <Card
+            key={test.id}
+            className="glass-card border-white/20 dark:border-white/8 rounded-2xl flex flex-col justify-between overflow-hidden relative group hover:scale-[1.02] transition-transform duration-300"
+          >
+            {/* Glow Backdrop */}
+            <div className={`absolute -right-16 -top-16 w-32 h-32 rounded-full bg-gradient-to-r ${test.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300 blur-xl`} />
 
-  return (
-    <div className="min-h-screen pb-20 pt-6 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Mental Health Assessments</h1>
-          <p className="text-muted-foreground text-pretty">
-            Take validated psychological assessments to better understand your mental health. These tools are used by
-            healthcare professionals worldwide.
-          </p>
-        </div>
-
-        {/* Important Notice */}
-        <Card className="glass border-amber-200 bg-amber-50/50">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm">
-                <p className="font-semibold text-amber-800 mb-1">Important Notice</p>
-                <p className="text-amber-700">
-                  These assessments are screening tools and not diagnostic instruments. If you're experiencing mental
-                  health concerns, please consult with a qualified healthcare professional for proper evaluation and
-                  treatment.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Stats */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <Card className="glass">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{mentalHealthTests.length}</div>
-              <p className="text-sm text-muted-foreground">Available Tests</p>
-            </CardContent>
-          </Card>
-          <Card className="glass">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">
-                {mentalHealthTests.reduce((sum, test) => sum + test.questions, 0)}
-              </div>
-              <p className="text-sm text-muted-foreground">Total Questions</p>
-            </CardContent>
-          </Card>
-          <Card className="glass">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">2-10</div>
-              <p className="text-sm text-muted-foreground">Minutes Each</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tests Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {mentalHealthTests.map((test) => (
-            <Card key={test.id} className="glass hover:glass-strong transition-all duration-300 hover:scale-[1.02]">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className={`p-2 rounded-lg ${test.color} bg-opacity-10 mb-3`}>
-                    <test.icon className={`h-6 w-6 ${test.color.replace("bg-", "text-")}`} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Badge variant="outline" className={getDifficultyColor(test.difficulty)}>
-                      {test.difficulty}
-                    </Badge>
-                    <Badge variant="outline" className={getPopularityColor(test.popularity)}>
-                      {test.popularity}
-                    </Badge>
-                  </div>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between mb-2">
+                <Badge variant="outline" className="text-[9px] py-0 px-2 rounded-full border-primary/20 bg-primary/5 text-primary">
+                  {test.category}
+                </Badge>
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-semibold">
+                  <Clock className="h-3 w-3" /> {test.duration}
                 </div>
-                <CardTitle className="text-lg">{test.title}</CardTitle>
-                <CardDescription className="text-pretty">{test.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {test.duration}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {test.questions} questions
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary">{test.category}</Badge>
-                    {test.lastTaken && (
-                      <span className="text-xs text-muted-foreground">Last taken: {test.lastTaken}</span>
-                    )}
-                  </div>
-                  <Button asChild className="w-full">
-                    <Link href={`/tests/${test.id}`}>Start Assessment</Link>
-                  </Button>
+              </div>
+              <CardTitle className="text-base font-extrabold leading-tight group-hover:text-primary transition-colors min-h-[2.5rem] flex items-center">
+                {test.name}
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
+              <div className="min-h-[3.5rem] flex items-start">
+                <CardDescription className="text-xs leading-relaxed text-muted-foreground line-clamp-3">
+                  {test.description}
+                </CardDescription>
+              </div>
+
+              <div className="space-y-3 pt-3 border-t border-white/10">
+                <div className="flex justify-between items-center text-[9px] text-muted-foreground font-bold">
+                  <span className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" /> {test.questions} clinical queries
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-500" /> Automatic scale
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
-        {/* Information Section */}
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle>About These Assessments</CardTitle>
-            <CardDescription>Understanding mental health screening tools</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold mb-2">What are these tests?</h4>
-                <p className="text-sm text-muted-foreground text-pretty">
-                  These are validated psychological screening tools used by healthcare professionals to assess various
-                  aspects of mental health. They help identify symptoms and measure severity levels.
-                </p>
+                <Button asChild className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-95 text-white border-0 py-5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 h-10 shadow-sm transition-all duration-300">
+                  <Link href={`/tests/${test.id}`}>
+                    Start Assessment <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">How to use results?</h4>
-                <p className="text-sm text-muted-foreground text-pretty">
-                  Results provide insights into your current mental state but should not replace professional diagnosis.
-                  Use them to track changes over time and discuss with healthcare providers.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Privacy & Security</h4>
-                <p className="text-sm text-muted-foreground text-pretty">
-                  All assessment data is stored securely and privately. Your responses are encrypted and only accessible
-                  to you. We never share personal health information.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">When to seek help?</h4>
-                <p className="text-sm text-muted-foreground text-pretty">
-                  If assessments indicate moderate to severe symptoms, or if you're having thoughts of self-harm, please
-                  reach out to a mental health professional or crisis helpline immediately.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Crisis Resources */}
-        <Card className="glass border-red-200 bg-red-50/50">
-          <CardHeader>
-            <CardTitle className="text-red-800">Crisis Resources</CardTitle>
-            <CardDescription className="text-red-700">
-              If you're in crisis or having thoughts of self-harm, please reach out immediately:
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="font-semibold text-red-800">National Suicide Prevention Lifeline</p>
-                <p className="text-red-700">988 (US) - Available 24/7</p>
-              </div>
-              <div>
-                <p className="font-semibold text-red-800">Crisis Text Line</p>
-                <p className="text-red-700">Text HOME to 741741</p>
-              </div>
-              <div>
-                <p className="font-semibold text-red-800">International Association for Suicide Prevention</p>
-                <p className="text-red-700">iasp.info/resources/Crisis_Centres</p>
-              </div>
-              <div>
-                <p className="font-semibold text-red-800">Emergency Services</p>
-                <p className="text-red-700">911 (US) or your local emergency number</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-    </div>
-  )
-}
+    )
+  }
 
-export default function TestsPage() {
   return (
-    <AuthProvider>
-      <MoodProvider>
-        <AuthGuard>
-          <TestsContent />
-          <BottomNavigation />
-          <MitraAIChat />
-        </AuthGuard>
-      </MoodProvider>
-    </AuthProvider>
+    <AuthGuard>
+      <div className="min-h-screen pb-20 pt-6 px-4">
+        <div className="max-w-5xl mx-auto space-y-8 animate-fade-in-up">
+          
+          {/* Header Title */}
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Clinical Assessments</h1>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto">
+              Screen yourself with clinically validated mental health assessments to log and track index metrics.
+            </p>
+          </div>
+
+          {/* Categorized Tabs */}
+          <Tabs defaultValue="all" className="space-y-8">
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 glass border border-white/20 dark:border-white/8 rounded-2xl p-1 max-w-2xl mx-auto gap-1">
+              <TabsTrigger value="all" className="rounded-xl text-xs font-bold py-2">
+                All Tests
+              </TabsTrigger>
+              <TabsTrigger value="mood" className="rounded-xl text-xs font-bold py-2">
+                Mood & Anxiety
+              </TabsTrigger>
+              <TabsTrigger value="stress" className="rounded-xl text-xs font-bold py-2">
+                Stress & Burnout
+              </TabsTrigger>
+              <TabsTrigger value="sleep" className="rounded-xl text-xs font-bold py-2">
+                Well-Being & Sleep
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-0">
+              {renderGrid("all")}
+            </TabsContent>
+            <TabsContent value="mood" className="mt-0">
+              {renderGrid("mood")}
+            </TabsContent>
+            <TabsContent value="stress" className="mt-0">
+              {renderGrid("stress")}
+            </TabsContent>
+            <TabsContent value="sleep" className="mt-0">
+              {renderGrid("sleep")}
+            </TabsContent>
+          </Tabs>
+
+          {/* Medical Disclaimer Banner (Placed below tests list) */}
+          <Card className="glass border-amber-500/20 dark:border-amber-500/10 bg-amber-500/5 rounded-3xl p-5 shadow-sm mt-8">
+            <div className="flex gap-4 items-start text-amber-800 dark:text-amber-300">
+              <ShieldAlert className="h-6 w-6 flex-shrink-0 text-amber-500 animate-pulse" />
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm">Medical Screening Disclaimer</h4>
+                <p className="text-xs leading-relaxed opacity-90">
+                  These self-assessments are screening indicators only. They do not constitute diagnostic medical analysis, therapy, or prescriptions. Always discuss mental health trends with a qualified clinician. If you are experiencing severe distress or crisis, please contact your local emergency services immediately.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Help/Inquiry Link */}
+          <div className="text-center py-4">
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 font-semibold">
+              <HelpCircle className="h-4 w-4 text-primary" /> Need assistance picking the right test?
+              <Link href="/contact" className="text-primary hover:underline font-bold">
+                Ask support
+              </Link>
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </AuthGuard>
   )
 }

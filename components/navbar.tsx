@@ -3,17 +3,23 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Sun, Moon, Globe, User, UserX, Settings } from "lucide-react"
+import { Menu, X, Sun, Moon, User } from "lucide-react"
 import { useAuth } from "@/components/contexts/auth-context"
 import { useTheme } from "@/components/contexts/theme-context"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useTranslation } from "@/lib/translations"
+import { usePathname } from "next/navigation"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuth()
   const { theme, language, userMode, toggleTheme, setLanguage, toggleUserMode } = useTheme()
   const t = useTranslation(language)
+  const pathname = usePathname()
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/"
+    return pathname.startsWith(path)
+  }
 
   const languages = {
     en: "English",
@@ -21,61 +27,69 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-white/20 animate-slide-down">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
+    <div className="fixed top-4 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 animate-slide-down">
+      <nav className="max-w-6xl mx-auto rounded-full glass border border-white/25 dark:border-white/10 px-6 py-1.5 shadow-lg backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center h-12">
+          <Link href="/" className="flex items-center transition-none">
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
               Equanima
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-2">
             <Link
               href="/"
-              className="text-foreground/80 hover:text-primary transition-all duration-300 hover:scale-105"
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                isActive("/")
+                  ? "bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/5"
+              }`}
             >
               {t.home}
             </Link>
             <Link
               href="/dashboard"
-              className="text-foreground/80 hover:text-primary transition-all duration-300 hover:scale-105"
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                isActive("/dashboard")
+                  ? "bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/5"
+              }`}
             >
               {t.dashboard}
             </Link>
             <Link
               href="/mood-tracker"
-              className="text-foreground/80 hover:text-primary transition-all duration-300 hover:scale-105"
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                isActive("/mood-tracker")
+                  ? "bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/5"
+              }`}
             >
               {t.moodTracker}
             </Link>
             <Link
               href="/tests"
-              className="text-foreground/80 hover:text-primary transition-all duration-300 hover:scale-105"
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                isActive("/tests")
+                  ? "bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/5"
+              }`}
             >
               {t.tests}
             </Link>
             <Link
               href="/about"
-              className="text-foreground/80 hover:text-primary transition-all duration-300 hover:scale-105"
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                isActive("/about")
+                  ? "bg-primary/15 text-primary border border-primary/25 shadow-sm"
+                  : "text-foreground/70 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/5"
+              }`}
             >
               {t.about}
             </Link>
 
             <div className="flex items-center space-x-2">
-              {/* Settings Link */}
-              <Link href="/settings">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hover:scale-110 transition-all duration-300 text-foreground hover:text-primary"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
-
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
@@ -85,46 +99,17 @@ export function Navbar() {
               >
                 {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
               </Button>
-
-              {/* Language Toggle */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:scale-110 transition-all duration-300 text-foreground hover:text-primary"
-                  >
-                    <Globe className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="glass">
-                  {Object.entries(languages).map(([code, name]) => (
-                    <DropdownMenuItem
-                      key={code}
-                      onClick={() => setLanguage(code as "en" | "hi")}
-                      className={language === code ? "bg-primary/20" : ""}
-                    >
-                      {name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* User Mode Toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleUserMode}
-                className="hover:scale-110 transition-all duration-300 text-foreground hover:text-primary"
-              >
-                {userMode === "user" ? <User className="h-4 w-4" /> : <UserX className="h-4 w-4" />}
-              </Button>
             </div>
 
             {user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-foreground bg-white/10 px-3 py-1 rounded-full animate-fade-in border border-white/20">
+                <span className="text-xs font-semibold text-foreground bg-white/10 px-3 py-1.5 rounded-full border border-white/25 flex items-center gap-1.5">
                   {t.welcome}, {user.name}
+                  {user.role && (
+                    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/25 font-bold">
+                      {user.role}
+                    </span>
+                  )}
                 </span>
                 <Button
                   onClick={logout}
@@ -176,7 +161,7 @@ export function Navbar() {
               <Link href="/about" className="block px-3 py-2 text-foreground/80 hover:text-primary">
                 {t.about}
               </Link>
-              <Link href="/settings" className="block px-3 py-2 text-foreground/80 hover:text-primary">
+              <Link href="/profile?tab=account" className="block px-3 py-2 text-foreground/80 hover:text-primary">
                 {t.settings}
               </Link>
               {user ? (
@@ -199,5 +184,6 @@ export function Navbar() {
         )}
       </div>
     </nav>
+  </div>
   )
 }

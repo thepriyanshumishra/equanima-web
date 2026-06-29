@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/contexts/auth-context"
+import { usePathname } from "next/navigation"
 
 interface Message {
   id: string
@@ -80,7 +82,13 @@ const quickSuggestions = [
 ]
 
 export function MitraAIChat() {
+  const { user } = useAuth()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+
+  const toolPaths = ["/dashboard", "/mood-tracker", "/tests", "/profile"]
+  const shouldShow = user && toolPaths.some((p) => pathname.startsWith(p))
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -238,6 +246,8 @@ export function MitraAIChat() {
   const handleSuggestionClick = (suggestion: string) => {
     sendMessage(suggestion)
   }
+
+  if (!shouldShow) return null
 
   return (
     <>

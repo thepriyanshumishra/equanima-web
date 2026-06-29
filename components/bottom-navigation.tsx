@@ -1,20 +1,26 @@
 "use client"
 
-import { Home, Brain, BarChart3, User, ClipboardList } from "lucide-react"
+import { Brain, BarChart3, User, ClipboardList, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/contexts/auth-context"
 
 const navItems = [
-  { href: "/", icon: Home, label: "Home" },
-  { href: "/mood-tracker", icon: Brain, label: "Mood" },
   { href: "/dashboard", icon: BarChart3, label: "Dashboard" },
+  { href: "/mood-tracker", icon: Brain, label: "Mood" },
   { href: "/tests", icon: ClipboardList, label: "Tests" },
   { href: "/profile", icon: User, label: "Profile" },
 ]
 
 export function BottomNavigation() {
   const pathname = usePathname()
+  const { user } = useAuth()
+
+  const toolPaths = ["/dashboard", "/mood-tracker", "/tests", "/profile"]
+  const shouldShow = user && toolPaths.some((p) => pathname.startsWith(p))
+
+  if (!shouldShow) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass-strong border-t">

@@ -8,6 +8,9 @@ interface User {
   name: string
   email: string
   avatar?: string
+  bio?: string
+  phone?: string
+  role?: "user" | "therapist" | "coordinator"
 }
 
 interface AuthContextType {
@@ -15,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   signup: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => void
+  updateUser: (updates: Partial<User>) => void
   isLoading: boolean
 }
 
@@ -38,11 +42,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Mock authentication
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
+    let role: "user" | "therapist" | "coordinator" = "user"
+    if (email.includes("therapist")) {
+      role = "therapist"
+    } else if (email.includes("coordinator") || email.includes("admin")) {
+      role = "coordinator"
+    }
+
     const mockUser: User = {
       id: "1",
       name: email.split("@")[0],
       email,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      role,
     }
 
     setUser(mockUser)
@@ -61,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name,
       email,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
+      role: "user",
     }
 
     setUser(mockUser)
@@ -74,7 +87,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("equanima_user")
   }
 
-  return <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>{children}</AuthContext.Provider>
+  const updateUser = (updates: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return null
+      const updated = { ...prev, ...updates }
+      localStorage.setItem("equanima_user", JSON.stringify(updated))
+      return updated
+    })
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
